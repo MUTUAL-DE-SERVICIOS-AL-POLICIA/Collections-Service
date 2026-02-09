@@ -21,27 +21,27 @@ git remote remove origin
 cp .env.example .env
 
 # Instalar las dependencias
-yarn install
+pnpm install
 
 # Correr proyecto en modo desarrollo
-yarn run start:dev
+pnpm run start:dev
 
 # Crear nuevo Modulo
 nest g res nombreModulo
 
 # Crear un seeder
-yarn seed:create --name src/database/seeds/nombre_seed.ts
+pnpm seed:create --name src/database/seeds/nombre_seed.ts
 # Correr seeder
-yarn seed:run --name src/database/seeds/{code}-nombre_seed.ts
+pnpm seed:run --name src/database/seeds/{code}-nombre_seed.ts
 
 # Crear migración
-yarn typeorm migration:create src/database/migrations/NombreDeLaMigración
+pnpm typeorm migration:create src/database/migrations/NombreDeLaMigración
 # Correr migración
-yarn migration:run
+pnpm migration:run
 # Revertir migración
-yarn migration:revert
+pnpm migration:revert
 # Ver estado de migraciones
-yarn migration:show
+pnpm migration:show
 
 # Para enlazar a un nuevo repositorio
 git remote add origin https://github.com/tu-usuario/{nombre_nuevo-microservice}.git
