@@ -1,5 +1,4 @@
-## Instalación para levantar cualquier proyecto independientemente
-## NOTA: Se debe tener NAST y GATEWAY LEVANTADOS
+## NOTA: Se debe tener NATS y GATEWAY LEVANTADOS
 
 ## 1. Clonar el repositorio
 
@@ -7,5 +6,17 @@
 git clone https://github.com/MUTUAL-DE-SERVICIOS-AL-POLICIA/Collections-Service.git
 ```
 
-## 2.
-👉 [Revisar README.md](https://github.com/MUTUAL-DE-SERVICIOS-AL-POLICIA/template-microservice)
+## 2. Crear el archivo .env en base al .env.example
+```bash
+cp .env.example .env
+```
+
+## 3. Instalar las dependencias
+```bash
+pnpm install
+```
+
+## 4. Correr proyecto en modo desarrollo
+```bash
+pnpm run start:dev
+```
