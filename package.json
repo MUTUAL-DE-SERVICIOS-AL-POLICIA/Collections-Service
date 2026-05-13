@@ -18,12 +18,12 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed:run": "yarn build && node ./node_modules/typeorm-extension/bin/cli.cjs seed:run -d src/database/data-source.ts",
-    "seed:create": "node ./node_modules/typeorm-extension/bin/cli.cjs seed:create",
-    "migration:show": "ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:show -d src/database/data-source.ts",
-    "migration:create": "ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:create src/database/migrations/",
-    "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:run -d src/database/data-source.ts",
-    "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm migration:revert -d src/database/data-source.ts"
+    "db:schema:ensure": "ts-node -r tsconfig-paths/register src/database/scripts/ensure-schema.ts",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/database/config/data-source.ts",
+    "migration:show": "pnpm run db:schema:ensure && pnpm run typeorm migration:show",
+    "migration:create": "ts-node -r tsconfig-paths/register src/database/scripts/create-migration.ts",
+    "migration:run": "pnpm run db:schema:ensure && pnpm run typeorm migration:run",
+    "migration:revert": "pnpm run db:schema:ensure && pnpm run typeorm migration:revert"
   },
   "dependencies": {
     "@nestjs/common": "11.1.13",

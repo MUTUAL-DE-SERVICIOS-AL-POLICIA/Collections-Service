@@ -1,27 +1,23 @@
 import { config } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { SeederOptions } from 'typeorm-extension';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { DbEnvs } from 'src/config';
 
 config();
 
-export const options: DataSourceOptions & SeederOptions = {
+export const options: DataSourceOptions = {
   type: 'postgres' as const,
   host: DbEnvs.dbHost,
   port: DbEnvs.dbPort,
   database: DbEnvs.dbDatabase,
   username: DbEnvs.dbUsername,
   password: DbEnvs.dbPassword,
-  synchronize: DbEnvs.dbSynchronize,
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  namingStrategy: new SnakeNamingStrategy(),
-
-  seeds: ['src/database/seeds/**/*{.ts,.js}'],
-  seedTracking: true,
-
+  synchronize: false,
   schema: DbEnvs.dbSchema,
-  migrations: ['dist/database/migrations/**/*{.ts,.js}'],
+  migrationsTableName: 'collections_service_migrations',
+  entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
+  namingStrategy: new SnakeNamingStrategy(),
+  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
 };
 
 export default new DataSource(options);

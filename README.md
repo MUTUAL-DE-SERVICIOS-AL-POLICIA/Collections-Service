@@ -20,3 +20,36 @@ pnpm install
 ```bash
 pnpm run start:dev
 ```
+
+## 5. Migraciones
+
+### Crear una migracion
+```bash
+pnpm run migration:create -- src/database/migrations/NombreDeLaMigracion
+```
+
+Estructura usada para base de datos:
+```bash
+src/database/
+├── config/
+│   └── data-source.ts
+├── migrations/
+└── scripts/
+    ├── create-migration.ts
+    └── ensure-schema.ts
+```
+
+### Ver migraciones pendientes y ejecutadas
+```bash
+pnpm run migration:show
+```
+
+### Ejecutar migraciones
+```bash
+pnpm run migration:run
+```
+
+### Revertir la ultima migracion ejecutada
+```bash
+pnpm run migration:revert
+```
