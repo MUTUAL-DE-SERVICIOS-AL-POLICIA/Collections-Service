@@ -1,11 +1,15 @@
 import {
-  IsDecimal,
+  IsDateString,
   IsNotEmpty,
+  IsNumber,
   IsString,
   MaxLength,
 } from 'class-validator';
 
 export class CreateTransactionDto {
+  @IsDateString()
+  paymentDate: string;
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
@@ -26,9 +30,14 @@ export class CreateTransactionDto {
   @MaxLength(255)
   accountNumber: string;
 
-  @IsDecimal(
-    { decimal_digits: '0,2' },
-    { message: 'total debe ser un número decimal válido' },
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  paymentType: string;
+
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: 'total debe ser un número válido con hasta 2 decimales' },
   )
   total: number;
 

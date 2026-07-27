@@ -1,36 +1,47 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { NatsService } from 'src/common';
 import { Transaction } from './entities';
 import { Repository } from 'typeorm';
+import { CreateTransactionDto } from './dto/create-transactions.dto';
 
 @Injectable()
 export class CollectionsService {
+  private readonly logger = new Logger(CollectionsService.name);
 
   constructor(
-    private readonly nats: NatsService,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
   ) {}
 
-  async createTransaction(data): Promise<any> {
-    const response: any = await this.nats.firstValue('person.search', {
-      value,
-      type,
-    });
+  async createTransaction(data: CreateTransactionDto): Promise<{
+    error: boolean;
+    message: string;
+    data: Transaction | null;
+  }> {
+    try {
+      const transaction = this.transactionRepository.create(data);
+      const savedTransaction =
+        await this.transactionRepository.save(transaction);
 
-    if (!response?.serviceStatus) {
+      return {
+        error: false,
+        message: 'Transacción registrada correctamente',
+        data: savedTransaction,
+      };
+    } catch (error) {
+      const exception =
+        error instanceof Error ? error : new Error(String(error));
+
+      this.logger.error(
+        `Error al registrar la transacción: ${exception.message}`,
+        exception.stack,
+      );
+
       return {
         error: true,
-        message: 'Servicio de Beneficiarios no disponible',
+        message: 'Error al registrar la transacción',
         data: null,
       };
     }
-
-    return {
-      error: response.error ?? false,
-      message: response.message ?? 'Búsqueda de beneficiarios completada',
-      data: response.data ?? null,
-    };
   }
 }

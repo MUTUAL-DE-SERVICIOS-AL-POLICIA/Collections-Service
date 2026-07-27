@@ -16,6 +16,12 @@ export class Transaction {
   id: number;
 
   @Column({
+    name: 'paymentDate',
+    type: 'varchar',
+  })
+  paymentDate: string;
+
+  @Column({
     name: 'receiveName',
     type: 'varchar',
   })
@@ -36,6 +42,12 @@ export class Transaction {
     type: 'varchar',
   })
   accountNumber: string;
+
+  @Column({
+    name: 'paymentType',
+    type: 'varchar',
+  })
+  paymentType: string;
 
   @Column({
     type: 'decimal',
