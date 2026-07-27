@@ -24,28 +24,45 @@ export class CreateTableTransactions1784667129670 implements MigrationInterface 
             isNullable: false,
           },
           {
-            name: 'receiveName',
+            name: 'titularName',
             type: 'varchar',
+            length: '255',
+            isNullable: false,
+          },
+          {
+            name: 'payerName',
+            type: 'varchar',
+            length: '255',
             isNullable: false,
           },
           {
             name: 'description',
             type: 'varchar',
+            length: '255',
             isNullable: false,
           },
           {
             name: 'origin',
             type: 'varchar',
+            length: '50',
             isNullable: false,
           },
           {
             name: 'accountNumber',
             type: 'varchar',
+            length: '255',
             isNullable: false,
           },
           {
             name: 'paymentType',
             type: 'varchar',
+            length: '100',
+            isNullable: false,
+          },
+          {
+            name: 'receptionistUser',
+            type: 'varchar',
+            length: '100',
             isNullable: false,
           },
           {

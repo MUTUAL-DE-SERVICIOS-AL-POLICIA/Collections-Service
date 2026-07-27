@@ -1,10 +1,17 @@
 import {
   IsDateString,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsPositive,
   IsString,
   MaxLength,
 } from 'class-validator';
+
+export enum CollectionState {
+  COINCILIADO = 'COINCILIADO',
+  NO_COINCILIADO = 'NO COINCILIADO',
+}
 
 export class CreateTransactionDto {
   @IsDateString()
@@ -13,7 +20,12 @@ export class CreateTransactionDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  receiveName: string;
+  titularName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  payerName: string;
 
   @IsString()
   @IsNotEmpty()
@@ -22,7 +34,7 @@ export class CreateTransactionDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(255)
+  @MaxLength(50)
   origin: string;
 
   @IsString()
@@ -32,17 +44,21 @@ export class CreateTransactionDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(255)
+  @MaxLength(100)
   paymentType: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  receptionistUser: string;
 
   @IsNumber(
     { maxDecimalPlaces: 2 },
     { message: 'total debe ser un número válido con hasta 2 decimales' },
   )
+  @IsPositive()
   total: number;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
-  state: string;
+  @IsEnum(CollectionState)
+  state: CollectionState;
 }
