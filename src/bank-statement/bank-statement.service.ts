@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BankStatement, ConciliationState } from './entities/bank-statement.entity';
 import { CreateBankStatementDto, ImportBatchDto, UpdateBankStatementDto } from './dto/bank-statement.dto';
-import { ImportService } from '../common/import/import.service';
+import { ImportBatchService } from '../common/import/import.service';
 
 @Injectable()
 export class BankStatementService {
@@ -13,7 +13,7 @@ export class BankStatementService {
   constructor(
     @InjectRepository(BankStatement)
     private readonly repository: Repository<BankStatement>,
-    private readonly importService: ImportService,
+    private readonly importBatchService: ImportBatchService,
   ) {}
 
   async importBatch(batchDto: ImportBatchDto & { importId?: number }) {
@@ -24,17 +24,17 @@ export class BankStatementService {
       if (!row.date && !row.gloss) continue;
 
       cleanData.push({
-        date: this.importService.parseDate(row.date),
+        date: this.importBatchService.parseDate(row.date),
         operationCode: row.operationCode,
         documentNumber: row.documentNumber,
         gloss: row.gloss,
         transferredAccount: row.transferredAccount || null,
-        credits: this.importService.parseAmount(row.credits),
+        credits: this.importBatchService.parseAmount(row.credits),
         state: row.state || ConciliationState.NO_CONCILIADO,
       });
     }
 
-    return this.importService.importBatch(
+    return this.importBatchService.importBatch(
       this.repository,
       cleanData,
       batchDto.isLastBatch,
@@ -58,7 +58,7 @@ export class BankStatementService {
   async update(id: number, updateDto: UpdateBankStatementDto) {
     await this.findOne(id);
     if (updateDto.credits) {
-      updateDto.credits = this.importService.parseAmount(updateDto.credits);
+      updateDto.credits = this.importBatchService.parseAmount(updateDto.credits);
     }
     await this.repository.update(id, updateDto);
     return this.findOne(id);

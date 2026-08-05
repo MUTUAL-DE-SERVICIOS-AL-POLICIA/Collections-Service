@@ -3,13 +3,13 @@ import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { BankStatementService } from './bank-statement.service';
 import { ImportBatchDto, UpdateBankStatementDto } from './dto/bank-statement.dto';
-import { ImportService } from '../common/import/import.service';
+import { ImportBatchService } from '../common/import/import.service';
 
 @Controller('bank-statements')
 export class BankStatementController {
   constructor(
     private readonly service: BankStatementService,
-    private readonly importService: ImportService,
+    private readonly importBatchService: ImportBatchService,
   ) {}
 
   /**
@@ -29,7 +29,7 @@ export class BankStatementController {
    */
   @MessagePattern('collections.getMaxId')
   async handleGetMaxId(@Payload() data: { tableName: string; schema?: string }) {
-    const maxId = await this.importService.getMaxId(data.tableName, data.schema);
+    const maxId = await this.importBatchService.getMaxId(data.tableName, data.schema);
     return { maxId };
   }
 
@@ -41,7 +41,7 @@ export class BankStatementController {
    */
   @MessagePattern('collections.rollbackImport')
   async handleRollbackImport(@Payload() data: { importId: number }) {
-    await this.importService.rollbackImport(data.importId);
+    await this.importBatchService.rollbackImport(data.importId);
     return { rolledBack: true };
   }
 

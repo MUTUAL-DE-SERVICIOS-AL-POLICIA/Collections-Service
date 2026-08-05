@@ -17,7 +17,7 @@ interface BatchRange {
 }
 
 @Injectable()
-export class ImportService {
+export class ImportBatchService {
   private readonly logger = new Logger('ImportService');
 
 /**
@@ -118,11 +118,14 @@ private readonly importTables = new Map<number, string>();
   }
 
   /**
-   * Convierte camelCase a snake_case.
-   * Ej: "bankStatement" -> "bank_statements"
+   * Valida que un nombre de tabla o schema sea seguro para usar en SQL.
+   * Solo permite caracteres alfanuméricos y underscores.
+   * Previene SQL injection.
    */
-  toSnakeCase(str: string): string {
-    return str.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+  private validateSqlIdentifier(name: string): void {
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+      throw new BadRequestException(`Identificador SQL inválido: "${name}". Solo se permiten letras, números y guiones bajos.`);
+    }
   }
 
   /**
@@ -135,6 +138,10 @@ private readonly importTables = new Map<number, string>();
    */
   async getMaxId(tableName: string, schema?: string): Promise<number | null> {
     const schemaName = schema || DbEnvs.dbSchema;
+
+    // Validar contra SQL injection
+    this.validateSqlIdentifier(schemaName);
+    this.validateSqlIdentifier(tableName);
 
     const result = await this.dataSource.query(
       `SELECT MAX(id) as "maxId" FROM "${schemaName}"."${tableName}"`,
@@ -173,11 +180,17 @@ private readonly importTables = new Map<number, string>();
 
     const schema = DbEnvs.dbSchema;
 
+    // Validar contra SQL injection
+    this.validateSqlIdentifier(schema);
+    this.validateSqlIdentifier(tableName);
+
     for (const range of batches) {
       if (range.ids.length === 0) continue;
-      const idsLiteral = `(${range.ids.join(',')})`;
+      // Usar parámetros seguros en vez de interpolación
+      const idsPlaceholder = range.ids.map((_, i) => `$${i + 1}`).join(',');
       await this.dataSource.query(
-        `DELETE FROM "${schema}"."${tableName}" WHERE id IN ${idsLiteral}`,
+        `DELETE FROM "${schema}"."${tableName}" WHERE id IN (${idsPlaceholder})`,
+        range.ids,
       );
     }
 
