@@ -23,15 +23,20 @@ export class BankStatementService {
       // Ignoramos filas que no tengan fecha o glosa (para evitar filas vacías del CSV)
       if (!row.date && !row.gloss) continue;
 
-      cleanData.push({
-        date: this.importProcessorService.parseDate(row.date),
-        operationCode: row.operationCode,
-        documentNumber: row.documentNumber,
-        gloss: row.gloss,
-        transferredAccount: row.transferredAccount || null,
-        credits: this.importProcessorService.parseAmount(row.credits),
-        state: row.state || ConciliationState.NO_CONCILIADO,
-      });
+      try {
+        cleanData.push({
+          date: this.importProcessorService.parseDate(row.date),
+          operationCode: row.operationCode,
+          documentNumber: row.documentNumber,
+          gloss: row.gloss,
+          transferredAccount: row.transferredAccount || null,
+          credits: this.importProcessorService.parseAmount(row.credits),
+          state: row.state || ConciliationState.NO_CONCILIADO,
+        });
+      } catch (error) {
+        // Skip rows with invalid dates
+        this.logger.warn(`Fila omitida: fecha inválida "${row.date}" - ${(error as Error).message}`);
+      }
     }
 
     return this.importProcessorService.importBatch(

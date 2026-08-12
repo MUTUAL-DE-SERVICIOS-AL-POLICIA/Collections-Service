@@ -68,11 +68,22 @@ private readonly importInfo = new Map<number, ImportInfo>();
       value = Number(value);
     }
     if (typeof value === 'number') {
+      // Excel serial dates should be between 1 (1900-01-01) and ~2958465 (9999-12-31)
+      // Values outside this range are not real dates
+      if (value < 1 || value > 2958465) {
+        throw new Error(`Valor "${value}" no es un serial de Excel válido (rango esperado: 1-2958465).`);
+      }
       const excelEpoch = new Date(Date.UTC(1899, 11, 30));
       const date = new Date(excelEpoch.getTime() + value * 86400000);
+      if (isNaN(date.getTime())) {
+        throw new Error(`Fecha inválida: serial de Excel "${value}" no es una fecha válida.`);
+      }
       return date.toISOString();
     }
     if (value instanceof Date) {
+      if (isNaN(value.getTime())) {
+        throw new Error(`Fecha inválida: objeto Date inválido.`);
+      }
       return value.toISOString();
     }
     const str = String(value).trim();
