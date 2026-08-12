@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BankStatement, ConciliationState } from './entities/bank-statement.entity';
 import { CreateBankStatementDto, ImportBatchDto, UpdateBankStatementDto } from './dto/bank-statement.dto';
-import { ImportBatchService } from '../common/import/import.service';
+import { ImportProcessorService } from '../common/import/import-processor.service';
 
 @Injectable()
 export class BankStatementService {
@@ -13,7 +13,7 @@ export class BankStatementService {
   constructor(
     @InjectRepository(BankStatement)
     private readonly repository: Repository<BankStatement>,
-    private readonly importBatchService: ImportBatchService,
+    private readonly importProcessorService: ImportProcessorService,
   ) {}
 
   async importBatch(batchDto: ImportBatchDto & { importId?: number }) {
@@ -24,17 +24,17 @@ export class BankStatementService {
       if (!row.date && !row.gloss) continue;
 
       cleanData.push({
-        date: this.importBatchService.parseDate(row.date),
+        date: this.importProcessorService.parseDate(row.date),
         operationCode: row.operationCode,
         documentNumber: row.documentNumber,
         gloss: row.gloss,
         transferredAccount: row.transferredAccount || null,
-        credits: this.importBatchService.parseAmount(row.credits),
+        credits: this.importProcessorService.parseAmount(row.credits),
         state: row.state || ConciliationState.NO_CONCILIADO,
       });
     }
 
-    return this.importBatchService.importBatch(
+    return this.importProcessorService.importBatch(
       this.repository,
       cleanData,
       batchDto.isLastBatch,
@@ -58,7 +58,7 @@ export class BankStatementService {
   async update(id: number, updateDto: UpdateBankStatementDto) {
     await this.findOne(id);
     if (updateDto.credits) {
-      updateDto.credits = this.importBatchService.parseAmount(updateDto.credits);
+      updateDto.credits = this.importProcessorService.parseAmount(updateDto.credits);
     }
     await this.repository.update(id, updateDto);
     return this.findOne(id);

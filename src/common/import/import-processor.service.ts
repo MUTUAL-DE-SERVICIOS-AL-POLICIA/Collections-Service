@@ -1,4 +1,4 @@
-// src/common/import/import.service.ts
+// src/common/import/import-processor.service.ts
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { Repository, DataSource } from 'typeorm';
 import { plainToClass } from 'class-transformer';
@@ -16,9 +16,14 @@ interface BatchRange {
   ids: number[];
 }
 
+interface ImportInfo {
+  schema: string;
+  tableName: string;
+}
+
 @Injectable()
-export class ImportBatchService {
-  private readonly logger = new Logger('ImportService');
+export class ImportProcessorService {
+  private readonly logger = new Logger('ImportProcessorService');
 
 /**
  * Rastrea los lotes insertados por cada importación activa.
@@ -28,10 +33,12 @@ export class ImportBatchService {
 private readonly batchTracker = new Map<number, BatchRange[]>();
 
 /**
- * Almacena el nombre de la tabla (en snake_case) asociada a cada importación,
+ * Almacena el schema y nombre de la tabla asociada a cada importación,
  * necesario para hacer rollback con SQL raw sin depender del Repository.
+ * key = importId (ImportRecord.id)
+ * value = { schema, tableName }
  */
-private readonly importTables = new Map<number, string>();
+private readonly importInfo = new Map<number, ImportInfo>();
 
   constructor(private readonly dataSource: DataSource) {}
 
@@ -151,6 +158,33 @@ private readonly importTables = new Map<number, string>();
   }
 
   /**
+   * Resetea la secuencia de IDs de una tabla para que el próximo ID
+   * sea MAX(id) + 1. Se llama automáticamente después de un rollback.
+   *
+   * @param tableName Nombre de la tabla
+   * @param schema Schema de la tabla
+   */
+  async resetSequence(tableName: string, schema: string): Promise<void> {
+    this.validateSqlIdentifier(schema);
+    this.validateSqlIdentifier(tableName);
+
+    const seqName = `${tableName}_id_seq`;
+
+    try {
+      const result = await this.dataSource.query(
+        `SELECT setval($1, (SELECT COALESCE(MAX(id), 0) FROM "${schema}"."${tableName}"))`,
+        [`${schema}.${seqName}`],
+      );
+
+      const newSeqValue = result[0]?.setval;
+      this.logger.log(`Sequence ${schema}.${seqName} reset to ${newSeqValue}`);
+    } catch (error) {
+      this.logger.error(`Error resetting sequence ${schema}.${seqName}: ${error.message}`);
+      // No lanzar error - el rollback ya fue exitoso
+    }
+  }
+
+  /**
    * Valida todas las filas contra un DTO de class-validator.
    * @returns null si todas son válidas, o el primer mensaje de error.
    */
@@ -172,13 +206,26 @@ private readonly importTables = new Map<number, string>();
    * Rollback: elimina todas las filas insertadas por una importación.
    * Usa SQL raw porque se almacenó el nombre de la tabla en el tracker.
    * Se puede llamar externamente desde un handler NATS (rollbackImport).
+   *
+   * Después del rollback exitoso, resetea la secuencia de IDs automáticamente
+   * para que el próximo ID sea MAX(id) + 1.
    */
   async rollbackImport(importId: number): Promise<void> {
     const batches = this.batchTracker.get(importId);
-    const tableName = this.importTables.get(importId);
-    if (!batches || batches.length === 0 || !tableName) return;
+    const info = this.importInfo.get(importId);
+    if (!batches || batches.length === 0 || !info) {
+      this.logger.warn(`Rollback saltado: importId=${importId}, no hay datos para revertir`);
+      return;
+    }
 
-    const schema = DbEnvs.dbSchema;
+    const { schema, tableName } = info;
+    const totalIds = batches.reduce((sum, b) => sum + b.ids.length, 0);
+
+    this.logger.warn(`=== ROLLBACK INICIADO ===`);
+    this.logger.warn(`ImportId: ${importId}`);
+    this.logger.warn(`Tabla: ${schema}.${tableName}`);
+    this.logger.warn(`Lotes a eliminar: ${batches.length}`);
+    this.logger.warn(`Total registros a eliminar: ${totalIds}`);
 
     // Validar contra SQL injection
     this.validateSqlIdentifier(schema);
@@ -195,8 +242,13 @@ private readonly importTables = new Map<number, string>();
     }
 
     this.batchTracker.delete(importId);
-    this.importTables.delete(importId);
-    this.logger.warn(`Rollback completado para importId ${importId}: ${batches.length} lote(s) eliminados`);
+    this.importInfo.delete(importId);
+
+    this.logger.warn(`=== ROLLBACK COMPLETADO ===`);
+    this.logger.warn(`Registros eliminados: ${totalIds}`);
+
+    // Reset sequence automáticamente después de rollback exitoso
+    await this.resetSequence(tableName, schema);
   }
 
   /**
@@ -237,14 +289,18 @@ private readonly importTables = new Map<number, string>();
     if (data.length === 0) {
       if (isLastBatch) {
         this.batchTracker.delete(importId);
-        this.importTables.delete(importId);
+        this.importInfo.delete(importId);
       }
       return { processed: 0, isLastBatch, idStart: null, idEnd: null };
     }
 
-    // Almacenar el nombre real de la tabla la primera vez
-    if (!this.importTables.has(importId)) {
-      this.importTables.set(importId, repository.metadata.tableName);
+    // Almacenar el schema y nombre real de la tabla la primera vez
+    // El schema se obtiene automáticamente del Repository (de la Entity)
+    if (!this.importInfo.has(importId)) {
+      this.importInfo.set(importId, {
+        schema: repository.metadata.schema || 'public',
+        tableName: repository.metadata.tableName,
+      });
     }
 
     const result = await repository.createQueryBuilder()
@@ -268,7 +324,7 @@ private readonly importTables = new Map<number, string>();
     if (isLastBatch) {
       // Importación completada exitosamente, limpiar tracker
       this.batchTracker.delete(importId);
-      this.importTables.delete(importId);
+      this.importInfo.delete(importId);
     }
 
     return {
