@@ -1,8 +1,8 @@
 // src/bank-statement/bank-statement.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Put, Delete, Param, Body } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { BankStatementService } from './bank-statement.service';
-import { ImportBatchDto, UpdateBankStatementDto } from './dto/bank-statement.dto';
+import { UpdateBankStatementDto } from './dto/bank-statement.dto';
 import { ImportProcessorService } from '../common/import/import-processor.service';
 
 @Controller('bank-statements')
