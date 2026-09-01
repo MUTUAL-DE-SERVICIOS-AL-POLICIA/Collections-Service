@@ -2,7 +2,6 @@ import { Global, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { NATS_SERVICE, NastEnvs } from 'src/config';
 import { NatsService } from './nats/nats.service';
-import { ImportProcessorService } from './import/import-processor.service';
 @Global()
 @Module({
   imports: [
@@ -16,7 +15,7 @@ import { ImportProcessorService } from './import/import-processor.service';
       },
     ]),
   ],
-  providers: [NatsService, ImportProcessorService],
+  providers: [NatsService],
   exports: [
     ClientsModule.register([
       {
@@ -28,7 +27,6 @@ import { ImportProcessorService } from './import/import-processor.service';
       },
     ]),
     NatsService,
-    ImportProcessorService,
   ],
 })
 export class CommonModule {}
