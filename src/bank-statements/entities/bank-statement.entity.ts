@@ -12,7 +12,7 @@ export class BankStatement {
   id: number;
 
   @Column({ type: 'date' })
-  date: string;
+  date: Date;
 
   @Column({ name: 'operation_code', length: 50 })
   operationCode: string;

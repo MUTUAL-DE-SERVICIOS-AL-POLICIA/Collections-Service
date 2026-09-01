@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CollectionsService } from './collections.service';
-import { CollectionsController } from './collections.controller';
 import { Transaction } from './entities';
+import { TransactionsController } from './transactions.controller';
+import { CollectionsService } from './transactions.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -10,7 +10,7 @@ import { Transaction } from './entities';
       
     ]),
   ],
-  controllers: [CollectionsController],
+  controllers: [TransactionsController],
   providers: [CollectionsService],
 })
 export class CollectionsModule {}

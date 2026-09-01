@@ -44,4 +44,33 @@ export class CollectionsService {
       };
     }
   }
+
+  async findAll() {
+    const collections = await this.transactionRepository.find(
+      {
+        select: {
+          id: true,
+          paymentDate: true,
+          titularName: true,
+          payerName: true,
+          description: true,
+          origin: true,
+          accountNumber: true,
+          paymentType: true,
+          receptionistUser: true,
+          total: true,
+          state: true,
+        },
+        order: {
+          paymentDate: 'DESC',
+        },
+      }
+    );
+
+    return {
+      error: false,
+      message: 'Transacciones obtenidas correctamente',
+      data: collections,
+    };
+  }
 }
