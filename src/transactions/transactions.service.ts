@@ -13,7 +13,7 @@ export class CollectionsService {
     private readonly transactionRepository: Repository<Transaction>,
   ) {}
 
-  async createTransaction(data: CreateTransactionDto): Promise<{
+  async create(data: CreateTransactionDto): Promise<{
     error: boolean;
     message: string;
     data: Transaction | null;

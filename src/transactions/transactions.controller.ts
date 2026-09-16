@@ -7,12 +7,17 @@ import { CollectionsService } from './transactions.service';
 export class TransactionsController {
   constructor(private readonly collectionsService: CollectionsService) {}
 
-  @MessagePattern('collections.createTransaction')
-  async add(@Payload() data: CreateTransactionDto) {
-    return this.collectionsService.createTransaction(data);
+  @MessagePattern('collections.transactions.create')
+  async create(@Payload() data: CreateTransactionDto) {
+    return this.collectionsService.create(data);
   }
 
-  @MessagePattern('collections.findAll')
+  // @MessagePattern('collections.transactions.update')
+  // async update(@Payload() data: any) {
+  //   return this.collectionsService.update(data);
+  // }
+
+  @MessagePattern('collections.transactions.findAll')
   async findAll() {
     return this.collectionsService.findAll();
   }
