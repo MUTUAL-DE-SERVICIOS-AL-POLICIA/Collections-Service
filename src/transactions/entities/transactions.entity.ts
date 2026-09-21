@@ -16,26 +16,57 @@ export class Transaction {
   id: number;
 
   @Column({
-    name: 'receiveName',
+    name: 'paymentDate',
     type: 'varchar',
   })
-  receiveName: string;
+  paymentDate: string;
+
+  @Column({
+    name: 'titularName',
+    type: 'varchar',
+    length: 255,
+  })
+  titularName: string;
+
+  @Column({
+    name: 'payerName',
+    type: 'varchar',
+    length: 255,
+  })
+  payerName: string;
 
   @Column({
     type: 'varchar',
+    length: 255,
   })
   description: string;
 
   @Column({
     type: 'varchar',
+    length: 50,
   })
   origin: string;
 
   @Column({
     name: 'accountNumber',
     type: 'varchar',
+    length: 255,
   })
   accountNumber: string;
+
+  @Column({
+    name: 'paymentType',
+    type: 'varchar',
+    length: 100,
+  })
+  paymentType: string;
+
+  @Column({
+    name: 'receptionistUser',
+    type: 'varchar',
+    length: 100,
+  })
+  receptionistUser: string;
 
   @Column({
     type: 'decimal',
